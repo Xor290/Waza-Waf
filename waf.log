@@ -1,2 +1,0 @@
-2025/08/22 20:54:30 [INFO] Requête reçue de 127.0.0.1:53534 : GET /test
-2025/08/22 20:54:30 [BLOCK] Paramètre suspect. IP: 127.0.0.1:53534, Param: param, Valeur: <script>alert(1)</script>
