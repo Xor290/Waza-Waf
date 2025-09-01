@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard WAF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+    <!-- Menu latéral -->
+    <div class="w-64 bg-gradient-to-b from-blue-800 to-blue-900 text-white shadow-2xl">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold mb-8 flex items-center">
+                <div class="w-8 h-8 bg-blue-400 rounded-lg mr-3 flex items-center justify-center">
+                    🛡️
+                </div>
+                Dashboard WAF
+            </h1>
+            <nav class="space-y-2">
+                <a href="#" onclick="showSection('stats')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 active" data-section="stats">
+                    <span class="mr-3">📊</span>
+                    Stats par Agent
+                </a>
+                <a href="#" onclick="showSection('realtime')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" data-section="realtime">
+                    <span class="mr-3">⚡</span>
+                    Monitoring Temps Réel
+                </a>
+                <a href="#" onclick="showSection('logs')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" data-section="logs">
+                    <span class="mr-3">📋</span>
+                    Logs d'Activité
+                </a>
+                <a href="#" onclick="showSection('threats')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" data-section="threats">
+                    <span class="mr-3">⚠️</span>
+                    Détection Menaces
+                </a>
+                <a href="#" onclick="showSection('rules')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" data-section="rules">
+                    <span class="mr-3">⚙️</span>
+                    Règles WAF
+                </a>
+                <a href="#" onclick="showSection('analytics')" class="menu-item flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200" data-section="analytics">
+                    <span class="mr-3">📈</span>
+                    Analytics
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="flex-1 p-8">
+        <!-- Section Stats par Agent -->
+        <div id="stats-section" class="section animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Stats par Agent</h2>
+                <p class="text-gray-600">Vue d'ensemble des statistiques de sécurité par agent IP</p>
+            </div>
+            
+            <!-- Cartes de résumé -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Total Agents</p>
+                            <p id="totalAgents" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-blue-600 text-xl">🖥️</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Requêtes Safe</p>
+                            <p id="totalSafe" class="text-2xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 text-xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Requêtes Bloquées</p>
+                            <p id="totalBlocked" class="text-2xl font-bold text-red-600">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <span class="text-red-600 text-xl">🚫</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Taux de Blocage</p>
+                            <p id="blockRate" class="text-2xl font-bold text-purple-600">0%</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span class="text-purple-600 text-xl">📊</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau des stats -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800">Détails par Agent IP</h3>
+                    <div class="flex items-center mt-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                        <span class="text-sm text-gray-600">Mise à jour automatique toutes les 2 secondes</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                            <tr>
+                                <th class="py-4 px-6 text-left font-semibold">Agent IP</th>
+                                <th class="py-4 px-6 text-left font-semibold">Total</th>
+                                <th class="py-4 px-6 text-left font-semibold">Safe</th>
+                                <th class="py-4 px-6 text-left font-semibold">Bloquées</th>
+                                <th class="py-4 px-6 text-left font-semibold">Taux</th>
+                                <th class="py-4 px-6 text-left font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTable" class="divide-y divide-gray-200">
+                            <!-- Lignes dynamiques -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Monitoring Temps Réel -->
+        <div id="realtime-section" class="section hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Monitoring Temps Réel</h2>
+                <p class="text-gray-600">Surveillance en direct de l'activité WAF</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">⚡</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Monitoring Temps Réel</h3>
+                    <p class="text-gray-600">Fonctionnalité en cours de développement</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Logs -->
+        <div id="logs-section" class="section hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Logs d'Activité</h2>
+                <p class="text-gray-600">Journal détaillé des événements WAF</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">📋</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Logs d'Activité</h3>
+                    <p class="text-gray-600">Fonctionnalité en cours de développement</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Détection Menaces -->
+        <div id="threats-section" class="section hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Détection Menaces</h2>
+                <p class="text-gray-600">Analyse et classification des menaces détectées</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">⚠️</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Détection Menaces</h3>
+                    <p class="text-gray-600">Fonctionnalité en cours de développement</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Règles WAF -->
+        <div id="rules-section" class="section hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Règles WAF</h2>
+                <p class="text-gray-600">Configuration et gestion des règles de sécurité</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">⚙️</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Règles WAF</h3>
+                    <p class="text-gray-600">Fonctionnalité en cours de développement</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Analytics -->
+        <div id="analytics-section" class="section hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Analytics</h2>
+                <p class="text-gray-600">Analyse avancée et tendances des données de sécurité</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">📈</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Analytics</h3>
+                    <p class="text-gray-600">Fonctionnalité en cours de développement</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div id="errorMsg" class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden"></div>
+    </div>
+
+    <script>
+        // Navigation entre sections
+        function showSection(sectionName) {
+            // Cacher toutes les sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Afficher la section sélectionnée
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // Mettre à jour le menu actif
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.classList.remove('active', 'bg-blue-700');
+            });
+            
+            const activeItem = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active', 'bg-blue-700');
+            }
+        }
+
+        // Fonction de chargement des stats (modifiée)
+        async function loadStats() {
+            // Note: localStorage n'est pas supporté dans cet environnement
+            // Simulation avec des données de test
+            const mockData = {
+                "192.168.1.100": { Total: 1250, Safe: 1180, Blocked: 70 },
+                "192.168.1.101": { Total: 890, Safe: 850, Blocked: 40 },
+                "192.168.1.102": { Total: 2100, Safe: 1980, Blocked: 120 },
+                "10.0.0.50": { Total: 450, Safe: 420, Blocked: 30 },
+                "10.0.0.51": { Total: 750, Safe: 710, Blocked: 40 }
+            };
+
+            try {
+                // Simulation d'un appel API
+                const data = mockData;
+                const table = document.getElementById("statsTable");
+                table.innerHTML = ""; // reset
+
+                let totalAgents = 0;
+                let totalSafe = 0;
+                let totalBlocked = 0;
+                let totalRequests = 0;
+
+                for (let ip in data) {
+                    totalAgents++;
+                    totalSafe += data[ip].Safe;
+                    totalBlocked += data[ip].Blocked;
+                    totalRequests += data[ip].Total;
+
+                    let row = document.createElement("tr");
+                    row.className = "hover:bg-gray-50 transition-colors duration-150";
+                    
+                    const blockRate = ((data[ip].Blocked / data[ip].Total) * 100).toFixed(1);
+                    
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900">${ip}</td>
+                        <td class="py-4 px-6 text-gray-700">${data[ip].Total.toLocaleString()}</td>
+                        <td class="py-4 px-6 text-green-600 font-semibold">${data[ip].Safe.toLocaleString()}</td>
+                        <td class="py-4 px-6 text-red-600 font-semibold">${data[ip].Blocked.toLocaleString()}</td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: ${blockRate}%"></div>
+                                </div>
+                                <span class="text-sm font-medium">${blockRate}%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${data[ip].Blocked > 50 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                                ${data[ip].Blocked > 50 ? '⚠️ Élevé' : '✅ Normal'}
+                            </span>
+                        </td>
+                    `;
+                    table.appendChild(row);
+                }
+
+                // Mettre à jour les cartes de résumé
+                document.getElementById('totalAgents').textContent = totalAgents;
+                document.getElementById('totalSafe').textContent = totalSafe.toLocaleString();
+                document.getElementById('totalBlocked').textContent = totalBlocked.toLocaleString();
+                document.getElementById('blockRate').textContent = ((totalBlocked / totalRequests) * 100).toFixed(1) + '%';
+
+                // Cacher le message d'erreur
+                const errorDiv = document.getElementById("errorMsg");
+                errorDiv.classList.add('hidden');
+
+            } catch (err) {
+                console.error("Erreur fetch stats :", err);
+                const errorDiv = document.getElementById("errorMsg");
+                errorDiv.textContent = "Erreur réseau lors du fetch stats.";
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // Rechargement automatique toutes les 2 secondes
+        setInterval(loadStats, 2000);
+        
+        // Chargement initial
+        loadStats();
+        showSection('stats');
+    </script>
+</body>
+</html>

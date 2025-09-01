@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - WAF Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <div id="errorMsg" class="text-red-500 text-sm mb-4"></div>
+        <input id="username" type="text" placeholder="Username" 
+               class="w-full p-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <input id="password" type="password" placeholder="Password" 
+               class="w-full p-3 mb-6 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <button onclick="login()" 
+                class="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition">Login</button>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorDiv = document.getElementById("errorMsg");
+            errorDiv.innerText = "";
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem("jwtToken", data.token); // Stocke le token
+                    window.location.href = "/static/dashboard.html";
+                } else {
+                    errorDiv.innerText = data.error || "Login failed";
+                    console.error("Erreur login :", data);
+                }
+            } catch (err) {
+                console.error("Erreur fetch :", err);
+                errorDiv.innerText = "Erreur réseau";
+            }
+        }
+    </script>
+
+</body>
+</html>
