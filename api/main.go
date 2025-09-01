@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"waf_serveur/db"
-	"waf_serveur/handlers"
+	"waza_serveur/db"
+	"waza_serveur/handlers"
 
 	"github.com/gin-gonic/gin"
 )

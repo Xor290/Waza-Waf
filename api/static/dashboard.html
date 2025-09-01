@@ -56,6 +56,10 @@
                     <i class="fas fa-exclamation-triangle mr-3 text-red-400 group-hover:text-red-300"></i>
                     <span>Détection Menaces</span>
                 </a>
+                <a href="#" onclick="showSection('analytics')" class="menu-item flex items-center p-3 rounded-xl hover:bg-slate-700 transition-all duration-300 group" data-section="analytics">
+                    <i class="fas fa-analytics mr-3 text-purple-400 group-hover:text-purple-300"></i>
+                    <span>Analytics</span>
+                </a>
             </nav>
         </div>
     </div>
@@ -206,24 +210,136 @@
         <!-- Section Logs -->
         <div id="logs-section" class="section hidden animate-fade-in">
             <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
-                    <i class="fas fa-list-alt mr-3 text-green-600"></i>
-                    Logs d'Activité
-                </h2>
-                <p class="text-gray-600">Journal détaillé des événements WAF</p>
-            </div>
-            <div class="bg-white rounded-2xl shadow-xl p-12">
-                <div class="text-center">
-                    <div class="w-24 h-24 bg-gradient-to-r from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-file-alt text-green-600 text-4xl"></i>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
+                            <i class="fas fa-list-alt mr-3 text-green-600"></i>
+                            Logs d'Activité
+                        </h2>
+                        <p class="text-gray-600">Journal détaillé des événements WAF en temps réel</p>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-3">Logs d'Activité</h3>
-                    <p class="text-gray-600 mb-4">Fonctionnalité en cours de développement</p>
-                    <div class="flex justify-center">
-                        <span class="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                            <i class="fas fa-clock mr-2"></i>
-                            Prochainement disponible
-                        </span>
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                            <i class="fas fa-stream text-blue-500 text-xs mr-2 animate-pulse"></i>
+                            <span class="text-sm text-blue-700 font-medium">Temps réel</span>
+                        </div>
+                        <button onclick="clearLogs()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Effacer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres et contrôles -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-filter mr-1"></i>Type d'événement
+                        </label>
+                        <select id="logTypeFilter" onchange="filterLogs()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">Tous les types</option>
+                            <option value="SAFE">Requêtes Safe</option>
+                            <option value="BLOCKED">Requêtes Bloquées</option>
+                            <option value="SUSPICIOUS">Activité Suspecte</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-server mr-1"></i>Agent IP
+                        </label>
+                        <select id="agentFilter" onchange="filterLogs()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">Tous les agents</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-eye mr-1"></i>Affichage
+                        </label>
+                        <select id="logLimit" onchange="filterLogs()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="50">50 derniers logs</option>
+                            <option value="100">100 derniers logs</option>
+                            <option value="200">200 derniers logs</option>
+                            <option value="all">Tous les logs</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="pauseResumeLogs()" id="pauseBtn" class="w-full px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors">
+                            <i class="fas fa-pause mr-2"></i>Pause
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container des logs -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <i class="fas fa-terminal mr-2 text-gray-600"></i>
+                                Flux de Logs
+                            </h3>
+                            <div class="flex items-center mt-2">
+                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                                <span class="text-sm text-gray-600">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    <span id="logCount">0</span> événements affichés
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            Dernière mise à jour: <span id="lastUpdate">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Zone de logs -->
+                <div id="logsContainer" class="h-96 overflow-y-auto bg-gray-900 text-green-400 font-mono text-sm">
+                    <div class="p-4">
+                        <div class="flex items-center justify-center h-full text-gray-500">
+                            <div class="text-center">
+                                <i class="fas fa-play text-2xl mb-2"></i>
+                                <p>Démarrage du flux de logs...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques rapides des logs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Événements Safe</p>
+                            <p id="logsSafeCount" class="text-2xl font-bold text-green-600">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-ban text-red-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Événements Bloqués</p>
+                            <p id="logsBlockedCount" class="text-2xl font-bold text-red-600">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Activité Suspecte</p>
+                            <p id="logsSuspiciousCount" class="text-2xl font-bold text-orange-600">0</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -312,6 +428,16 @@
             const activeItem = document.querySelector(`[data-section="${sectionName}"]`);
             if (activeItem) {
                 activeItem.classList.add('active');
+            }
+
+            // Initialiser les logs si on va sur la section logs
+            if (sectionName === 'logs' && logs.length === 0) {
+                initLogFilters();
+                startLogSimulation();
+                // Ajouter quelques logs initiaux
+                for (let i = 0; i < 10; i++) {
+                    addLog(generateRandomLog());
+                }
             }
         }
 
@@ -406,6 +532,163 @@
                 errorDiv.querySelector('span').textContent = "Erreur réseau lors du fetch stats.";
                 errorDiv.classList.remove('hidden');
             }
+        }
+
+        // Variables globales pour les logs
+        let logs = [];
+        let filteredLogs = [];
+        let logsPaused = false;
+        let logInterval;
+
+        // Simulation des logs en temps réel
+        function generateRandomLog() {
+            const agents = ["192.168.1.100", "192.168.1.101", "192.168.1.102", "10.0.0.50", "10.0.0.51"];
+            const types = ["SAFE", "BLOCKED", "SUSPICIOUS"];
+            const methods = ["GET", "POST", "PUT", "DELETE"];
+            const paths = ["/", "/admin", "/login", "/api/users", "/uploads", "/config", "/dashboard"];
+            const userAgents = ["Mozilla/5.0", "Chrome/91.0", "Safari/14.0", "Bot/1.0"];
+            const threats = ["SQL Injection", "XSS Attack", "CSRF", "Path Traversal", "Command Injection"];
+            
+            const agent = agents[Math.floor(Math.random() * agents.length)];
+            const type = Math.random() < 0.7 ? "SAFE" : (Math.random() < 0.8 ? "BLOCKED" : "SUSPICIOUS");
+            const method = methods[Math.floor(Math.random() * methods.length)];
+            const path = paths[Math.floor(Math.random() * paths.length)];
+            const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+            const responseCode = type === "SAFE" ? 200 : (type === "BLOCKED" ? 403 : 429);
+            const threat = type !== "SAFE" ? threats[Math.floor(Math.random() * threats.length)] : null;
+            
+            return {
+                timestamp: new Date(),
+                agent: agent,
+                type: type,
+                method: method,
+                path: path,
+                responseCode: responseCode,
+                userAgent: userAgent,
+                threat: threat,
+                id: Date.now() + Math.random()
+            };
+        }
+
+        function addLog(log) {
+            logs.unshift(log);
+            if (logs.length > 1000) {
+                logs = logs.slice(0, 1000); // Garder seulement les 1000 derniers
+            }
+            updateLogCounts();
+            if (!logsPaused) {
+                filterLogs();
+            }
+        }
+
+        function formatLogLine(log) {
+            const timestamp = log.timestamp.toLocaleTimeString();
+            const typeColor = log.type === 'SAFE' ? 'text-green-400' : 
+                            log.type === 'BLOCKED' ? 'text-red-400' : 'text-orange-400';
+            const typeIcon = log.type === 'SAFE' ? '✓' : 
+                           log.type === 'BLOCKED' ? '✗' : '⚠';
+            
+            let logLine = `<div class="flex items-start py-1 hover:bg-gray-800 transition-colors">`;
+            logLine += `<span class="text-gray-500 mr-3 flex-shrink-0">[${timestamp}]</span>`;
+            logLine += `<span class="${typeColor} mr-3 flex-shrink-0">${typeIcon}</span>`;
+            logLine += `<span class="text-blue-400 mr-3 flex-shrink-0">${log.agent}</span>`;
+            logLine += `<span class="text-white mr-2">${log.method}</span>`;
+            logLine += `<span class="text-cyan-400 mr-3">${log.path}</span>`;
+            logLine += `<span class="text-gray-300 mr-3">${log.responseCode}</span>`;
+            
+            if (log.threat) {
+                logLine += `<span class="text-red-300 mr-3">[${log.threat}]</span>`;
+            }
+            
+            logLine += `<span class="text-gray-500 text-xs">${log.userAgent}</span>`;
+            logLine += `</div>`;
+            
+            return logLine;
+        }
+
+        function filterLogs() {
+            const typeFilter = document.getElementById('logTypeFilter').value;
+            const agentFilter = document.getElementById('agentFilter').value;
+            const limit = document.getElementById('logLimit').value;
+            
+            filteredLogs = logs.filter(log => {
+                if (typeFilter !== 'all' && log.type !== typeFilter) return false;
+                if (agentFilter !== 'all' && log.agent !== agentFilter) return false;
+                return true;
+            });
+            
+            if (limit !== 'all') {
+                filteredLogs = filteredLogs.slice(0, parseInt(limit));
+            }
+            
+            displayLogs();
+            updateLogCount();
+        }
+
+        function displayLogs() {
+            const container = document.getElementById('logsContainer');
+            const logsHtml = filteredLogs.map(log => formatLogLine(log)).join('');
+            
+            container.innerHTML = `<div class="p-4">${logsHtml || '<div class="text-center text-gray-500">Aucun log à afficher</div>'}</div>`;
+            
+            // Auto-scroll vers le bas si on n'est pas en pause
+            if (!logsPaused) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function updateLogCount() {
+            document.getElementById('logCount').textContent = filteredLogs.length;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateLogCounts() {
+            const safeCount = logs.filter(log => log.type === 'SAFE').length;
+            const blockedCount = logs.filter(log => log.type === 'BLOCKED').length;
+            const suspiciousCount = logs.filter(log => log.type === 'SUSPICIOUS').length;
+            
+            document.getElementById('logsSafeCount').textContent = safeCount;
+            document.getElementById('logsBlockedCount').textContent = blockedCount;
+            document.getElementById('logsSuspiciousCount').textContent = suspiciousCount;
+        }
+
+        function clearLogs() {
+            if (confirm('Êtes-vous sûr de vouloir effacer tous les logs ?')) {
+                logs = [];
+                filteredLogs = [];
+                displayLogs();
+                updateLogCounts();
+                updateLogCount();
+            }
+        }
+
+        function pauseResumeLogs() {
+            const btn = document.getElementById('pauseBtn');
+            logsPaused = !logsPaused;
+            
+            if (logsPaused) {
+                btn.innerHTML = '<i class="fas fa-play mr-2"></i>Reprendre';
+                btn.classList.remove('bg-orange-100', 'text-orange-700', 'hover:bg-orange-200');
+                btn.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+            } else {
+                btn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+                btn.classList.remove('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+                btn.classList.add('bg-orange-100', 'text-orange-700', 'hover:bg-orange-200');
+                filterLogs(); // Rafraîchir l'affichage
+            }
+        }
+
+        // Initialiser les filtres d'agents
+        function initLogFilters() {
+            const agentFilter = document.getElementById('agentFilter');
+            const agents = ["192.168.1.100", "192.168.1.101", "192.168.1.102", "10.0.0.50", "10.0.0.51"];
+            
+            agents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent;
+                option.textContent = agent;
+                agentFilter.appendChild(option);
+            });
         }
 
         // Rechargement automatique toutes les 2 secondes
