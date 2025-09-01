@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"net/http"
-	"waza_serveur/models"
+
 	"github.com/gin-gonic/gin"
 )
 
-
+type AgentStats struct {
+	Total   int `json:"Total"`
+	Safe    int `json:"Safe"`
+	Blocked int `json:"Blocked"`
+}
 
 func StatsHandler(c *gin.Context) {
 	// Exemple : données mockées
